@@ -2,7 +2,7 @@ import dataclasses
 
 import numpy as np
 
-from geometry import pol2cart
+from .geometry import pol2cart
 
 
 # Schwarzschild radius of Sun, in units of R0

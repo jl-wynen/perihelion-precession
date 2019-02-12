@@ -7,8 +7,6 @@ import time
 
 import numpy as np
 
-from geometry import make_grid, flamm_projection
-from util import neighbours
 import sim
 
 # image dimensions
@@ -20,8 +18,8 @@ CENTRE = np.array((WIDTH/2, HEIGHT/2))
 BACKGROUND = "#2c2c2c"
 
 # grid-lines
-HLINES, VLINES = make_grid((-200, -200), (WIDTH+200, HEIGHT+200),
-                           nlines=(20, 20), resolution=(50, 50))
+HLINES, VLINES = sim.make_grid((-200, -200), (WIDTH+200, HEIGHT+200),
+                               nlines=(20, 20), resolution=(50, 50))
 
 def init_directory(path, overwrite):
     if path.exists():
@@ -93,13 +91,13 @@ def setup_window(width, height, background):
     return window, canvas
 
 def draw_line(canvas, line, colour):
-    for p0, p1 in neighbours(line):
+    for p0, p1 in sim.neighbours(line):
         if not np.ma.is_masked(p0) and not np.ma.is_masked(p1):
             canvas.create_line(*p0[:2], *p1[:2], fill=colour)
 
 def draw_grid(canvas, centre, rs, colour):
     for line in chain(HLINES, VLINES):
-        draw_line(canvas, flamm_projection(line, centre, rs, np.array((0, 0))), colour)
+        draw_line(canvas, sim.flamm_projection(line, centre, rs, np.array((0, 0))), colour)
 
 def sim2screen(point, sim_bounds, screen_size):
     return point*screen_size/2/sim_bounds + screen_size/2
