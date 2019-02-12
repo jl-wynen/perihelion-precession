@@ -9,6 +9,7 @@ verify_ssl = true
 numpy = "*"
 numba = "*"
 colour = "*"
+scipy = "*"
 
 [requires]
 python_version = "3.7"
