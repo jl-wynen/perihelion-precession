@@ -7,26 +7,47 @@ import numpy as np
 import sim
 
 # image dimensions
-WIDTH = 600
-HEIGHT = 600
+SCREEN_WIDTH = 600
+SCREEN_HEIGHT = 600
+WORLD_WIDTH = 16
+WORLD_HEIGHT = 16
 
 # resolution of output bitmaps
 OUTPUT_RESOLUTION = 150
 
 # grid-lines
-HLINES, VLINES = sim.make_grid((-10, -10), (10, 10),
+HLINES, VLINES = sim.make_grid((-WORLD_WIDTH/2-4, -WORLD_HEIGHT/2-4),
+                               (WORLD_WIDTH/2+4, WORLD_HEIGHT/2+4),
                                nlines=(20, 20), resolution=(50, 50))
+GRID_COLOUR = "#404040"
 
 
 def draw_grid(anim, lines, centre, rs, colour):
     for line in lines:
-        anim.line(sim.flamm_projection(line, centre, rs, np.array((-10, -10))), colour, tags="grid")
-        # anim.line(line, colour, tags="grid")
+        anim.line(sim.flamm_projection(line, centre, rs, np.array((WORLD_WIDTH, WORLD_HEIGHT))),
+                  colour, tags="grid")
 
         # for p0, p1 in sim.neighbours(line):
         #     q0 = sim.radial_transform(p0, centre, rs, 1, 4)
         #     q1 = sim.radial_transform(p1, centre, rs, 1, 4)
-        #     draw_line(canvas, (q0, q1), colour, "grid")
+        #     anim.line((q0, q1), colour, tags="grid")
+
+def anim_grid(anim, rsiter, frames=None):
+    for rs in rsiter:
+        start = time.time()
+
+        anim.clear("grid")
+        draw_grid(anim, chain(HLINES, VLINES), np.array((0, 0)), rs, GRID_COLOUR)
+        anim.canvas.tag_lower("grid", "sun")
+        anim.update()
+
+        if frames:
+            frames.save_frame(anim.canvas, ps=True, png=True, resolution=OUTPUT_RESOLUTION)
+
+        end = time.time()
+        time_diff = end-start
+        time.sleep(max(1/60 - time_diff, 0))
+
 
 def anim_orbit(anim, mercury, nframes, dt, alpha, beta, frames=None):
     mercury_oval = None
@@ -53,7 +74,10 @@ def anim_orbit(anim, mercury, nframes, dt, alpha, beta, frames=None):
     return mercury
 
 def main():
-    anim = sim.tk.Tk(sim.Transform((-5, -5), (5, 5), (0, 0), (0+WIDTH, 0+HEIGHT)),
+    anim = sim.tk.Tk(sim.Transform((-WORLD_WIDTH/2, -WORLD_HEIGHT/2),
+                                   (WORLD_WIDTH/2, WORLD_HEIGHT/2),
+                                   (0, 0),
+                                   (0+SCREEN_WIDTH, 0+SCREEN_HEIGHT)),
                      background="#161616")
 
     # frames = sim.FrameManager(Path(__file__).resolve().parent/"frames", True)
@@ -66,10 +90,14 @@ def main():
     beta = 0.0 # Strength of 1/r**4 term
 
     anim.draw_background()
-    draw_grid(anim, chain(HLINES, VLINES), np.array((0, 0)), 0.01, "#404040")
-    anim.circle(sun.x, 0.5, fill="yellow")
+    draw_grid(anim, chain(HLINES, VLINES), np.array((0, 0)), 0, GRID_COLOUR)
+    anim.circle(sun.x, 0.5, fill="yellow", tags="sun")
 
-    mercury = anim_orbit(anim, mercury, 100000, dt, alpha, beta)
+
+    mercury = anim_orbit(anim, mercury, 400, dt, 0, 0)
+    anim_grid(anim, np.linspace(0, 0.05, 10))
+    anim.clear("mercury")
+    mercury = anim_orbit(anim, mercury, 400, dt, alpha, beta)
 
     # print("Creating GIF")
     # frames.convert_to_gif("mercury.gif")
