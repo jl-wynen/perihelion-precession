@@ -28,6 +28,7 @@ class FrameManager:
 
         psname = self.path/self._fname_fmt.format(self._current)
         # save ps image in any case
+        # TODO use x=0, y=0, width=600, height=600 to print only visible area (removes artefacts at the borders)
         canvas.postscript(file=psname, colormode="color")
 
         if png:
@@ -48,6 +49,11 @@ class FrameManager:
         if number is None:
             number = self._current
         fname = self.path/self._fname_fmt.format(number)
+
+        # TODO
+# subprocess.run(['gs', '-sDEVICE=png16m', '-sOutputFile=%04d.png',
+#                 '-g50x50', '-dBATCH', '-dNOPAUSE', *psfiles],
+#                cwd='frames')
 
         subprocess.run(["gs", "-dSAFER", "-dBATCH", "-dNOPAUSE", "-sDEVICE=png16m",
                         f"-r{resolution}", f"-sOutputFile={fname.with_suffix('.png')}", f"{fname}"],

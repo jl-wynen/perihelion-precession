@@ -44,9 +44,9 @@ def flamm_paraboloid(points, centre, rs, ref_point=np.array((0, 0))):
     return masked_points, depths
 
 
-def flamm_projection(points, centre, rs, ref_point=np.array((0, 0)), screen=0, camera=None):
+def flamm_projection(points, centre, rs, ref_point, screen=0, camera=None):
     if camera is None:
-        camera = np.array((*centre, 100))
+        camera = np.array((*centre, 1))
 
     # move points onto the paraboloid
     points, depths = flamm_paraboloid(points, centre, rs, ref_point)

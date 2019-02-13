@@ -1,6 +1,6 @@
-from tkinter import Tk, Canvas, mainloop
 from itertools import cycle, chain
 import time
+from pathlib import Path
 
 import numpy as np
 
@@ -10,38 +10,26 @@ import sim
 WIDTH = 600
 HEIGHT = 600
 
-CENTRE = np.array((WIDTH/2, HEIGHT/2))
-
-BACKGROUND = "#2c2c2c"
-
 # grid-lines
-HLINES, VLINES = sim.make_grid((-200, -200), (WIDTH+200, HEIGHT+200),
+HLINES, VLINES = sim.make_grid((-10, -10), (10, 10),
                                nlines=(20, 20), resolution=(50, 50))
 
 
-def setup_window(width, height, background):
-    """Open a new window contianing a canvas."""
-    window = Tk()
-    canvas = Canvas(window, width=width, height=height, background=background)
-    canvas.pack()
-    return window, canvas
+def draw_grid(anim, lines, centre, rs, colour):
+    for line in lines:
+        anim.line(sim.flamm_projection(line, centre, rs, np.array((-10, -10))), colour, tags="grid")
+        # anim.line(line, colour, tags="grid")
 
-def draw_line(canvas, line, colour):
-    for p0, p1 in sim.neighbours(line):
-        if not np.ma.is_masked(p0) and not np.ma.is_masked(p1):
-            canvas.create_line(*p0[:2], *p1[:2], fill=colour)
-
-def draw_grid(canvas, centre, rs, colour):
-    for line in chain(HLINES, VLINES):
-        draw_line(canvas, sim.flamm_projection(line, centre, rs, np.array((0, 0))), colour)
-
-def sim2screen(point, sim_bounds, screen_size):
-    return point*screen_size/2/sim_bounds + screen_size/2
+        # for p0, p1 in sim.neighbours(line):
+        #     q0 = sim.radial_transform(p0, centre, rs, 1, 4)
+        #     q1 = sim.radial_transform(p1, centre, rs, 1, 4)
+        #     draw_line(canvas, (q0, q1), colour, "grid")
 
 def main():
-    # frames = FrameManager(Path(__file__).resolve().parent/"frames", True)
+    anim = sim.tk.Tk(sim.Transform((-5, -5), (5, 5), (0, 0), (0+WIDTH, 0+HEIGHT)),
+                     background="#161616")
 
-    window, canvas = setup_window(WIDTH, HEIGHT, BACKGROUND)
+    # frames = sim.FrameManager(Path(__file__).resolve().parent/"frames", True)
 
     mercury = sim.CBody.mercury()
     sun = sim.CBody.sun()
@@ -50,76 +38,34 @@ def main():
     alpha = 5e6 # Strength of 1/r**3 term
     beta = 0.0 # Strength of 1/r**4 term
 
-    sim_bounds = np.array((5, 5))
-    screen_size = np.array((WIDTH, HEIGHT))
-
     mercury_oval = None
 
-    sx = sim2screen(sun.x, sim_bounds, screen_size)
+    anim.draw_background()
+    draw_grid(anim, chain(HLINES, VLINES), np.array((0, 0)), 0.01, "#404040")
+    anim.circle(sun.x, 0.5, fill="yellow")
 
-    canvas.create_rectangle(0, 0, WIDTH, HEIGHT, fill=BACKGROUND)
-    draw_grid(canvas, CENTRE, 20, "#404040")
-    canvas.create_oval(sx[0]-20, sx[1]-20,
-                       sx[0]+20, sx[1]+20,
-                       fill="yellow")
-    
-    trajectory = [sim2screen(mercury.x, sim_bounds, screen_size)]
+    trajectory = [mercury.x]
     while True:
+    # for i in range(50):
         mercury = sim.advance(mercury, dt, alpha, beta)
-        trajectory.append(sim2screen(mercury.x, sim_bounds, screen_size))
+        trajectory.append(mercury.x)
 
-        # canvas.delete("all")
-        if mercury_oval is not None:
-            canvas.delete(mercury_oval)
+        anim.clear(mercury_oval)
 
+        anim.line(trajectory[-2:], "#606060", lw=2)
+        mercury_oval = anim.circle(mercury.x, 0.1, fill="red", tags="mercury")
 
-        mx = sim2screen(mercury.x, sim_bounds, screen_size)
-
-        draw_line(canvas, trajectory[-2:], "gray")
-
-        mercury_oval = canvas.create_oval(mx[0]-10, mx[1]-10,
-                                          mx[0]+10, mx[1]+10,
-                                          fill="red")
-
-        window.update()
+        anim.update()
 
         time.sleep(1/60)
-        
-        # frames.save_frame(canvas, png=True, resolution=150)
-        # if i == 50:
-            # break
+
+    #     frames.save_frame(canvas, png=True, resolution=150)
 
     # print("Creating GIF")
     # frames.convert_to_gif("mercury.gif")
     # print("Created animation mercury.gif")
 
-    mainloop()
-
-# animate grid    
-# def main():
-#     # frames = FrameManager(Path(__file__).resolve().parent/"frames", True)
-
-#     window, canvas = setup_window(WIDTH, HEIGHT, BACKGROUND)
-
-#     rss = np.linspace(0, 100, 100)
-#     for i, rs in enumerate(cycle(chain(rss, reversed(rss)))):
-
-#         canvas.delete("all")
-#         canvas.create_rectangle(0, 0, WIDTH, HEIGHT, fill=BACKGROUND)
-
-#         canvas.create_oval(CENTRE[0]-rs, CENTRE[1]-rs, CENTRE[0]+rs, CENTRE[1]+rs, fill="black")
-#         draw_grid(canvas, CENTRE, rs, "gray")
-#         window.update()
-
-#         # frames.save_frame(canvas, png=True, resolution=150)
-#         # if i == 50:
-#             # break
-
-#     # print("Creating GIF")
-#     # frames.convert_to_gif("mercury.gif")
-#     # print("Created animation mercury.gif")
-
-#     mainloop()
+    sim.tk.mainloop()
 
 
 if __name__ == "__main__":

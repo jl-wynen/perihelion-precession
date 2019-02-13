@@ -7,31 +7,10 @@ from tempfile import TemporaryDirectory
 from pathlib import Path
 import shutil
 
-from colour import Color as Colour
-
-COLOURS = {
-    "aiphiblue": Colour(red=0, green=84/255, blue=159/255),
-    "aiphibordeaux": Colour(red=161/255, green=16/255, blue=53/255),
-    "aiphidark": Colour(red=45/255, green=38/255, blue=50/255),
-    "aiphidarkachrom": Colour(red=44/255, green=44/255, blue=44/255),
-    "aiphigreen": Colour(red=87/255, green=171/255, blue=39/255),
-    "aiphipetrol": Colour(red=0, green=97/255, blue=101/255),
-    "aiphired": Colour(red=204/255, green=7/255, blue=30/255),
-    "aiphiviolet": Colour(red=97/255, green=33/255, blue=88/255),
-    "aiphiyellow": Colour(red=1, green=237/255, blue=0)
-}
-
-COLOUR_ALIASES = {name[5:]: name for name in COLOURS.keys()}
-
-def norm_colour(colour):
-    """Resolve colour aliases."""
-    if colour is None:
-        return colour
-    return "!".join((COLOUR_ALIASES[elem] if elem in COLOUR_ALIASES else elem
-                     for elem in colour.split("!")))
+from .graphics import COLOURS, norm_colour
 
 def define_colours(colours):
-    """Return list of colour definition commands for all given colours (based on COLOURS)."""
+    """Return list of colour definition commands for all given colours (based on graphics.COLOURS)."""
     return [rf"\definecolor{{{colour}}}{{HTML}}{{{COLOURS[colour].hex[1:]}}}"
             for colour in colours]
 
@@ -87,7 +66,7 @@ def wrap(string, left="[", right="]"):
         return left+string+right
     return ""
 
-
+# TODO use transform and make all methods take coordinates in world space
 class Tikz:
     """
     Represents a single Tikz picture.
@@ -95,12 +74,13 @@ class Tikz:
     """
 
 
-    def __init__(self, background=None, defines=None, options=None,
+    def __init__(self, transform, background=None, defines=None, options=None,
                  kwoptions=None, global_colours=None):
         """
         Construct a new Tikz picture.
 
         Arguments:
+            transform: graphics.Transform that encodes world and screen coordinates.
             background: Colour (string) of the background, None for transparent background.
                         This colour must be defined in the TeX document outside of the figure.
             defines: list of custom commands to place before any other commands in the picture.
@@ -110,6 +90,7 @@ class Tikz:
                             Those colours are not redefined in the picture.
         """
 
+        self.transform = transform
         self.background = background
         self.defines = defines if defines else []
         self.options = options if options else []
@@ -192,24 +173,6 @@ class Tikz:
 
         self._commands.append(rf"\draw{wrap(fmt_options(options,kwopts))} " +
                               f" {ls} ".join(map(fmt_point, points))+";")
-
-    # def line(self, start, end, ls="--", draw="black", options=None, kwoptions=None):
-    #     r"""
-    #     Add a line between two points.
-
-    #     Arguments:
-    #         start: Start point of the line (two elment collection).
-    #         end: End point of the line (two elment collection).
-    #         ls: Line style (string).
-    #         draw: Colour of the line (string).
-    #         options: list of extra options to pass to \draw.
-    #         kwoptions: dict of extra keyword options to pass to \draw.
-    #     """
-
-    #     draw = norm_colour(draw)
-    #     self.use_colour(draw)
-    #     self._commands.append(rf"\draw{wrap(fmt_options(options,kwoptions,draw=draw))} "
-    #                           rf"{fmt_point(start)} {ls} {fmt_point(end)};")
 
     def node(self, pos, shape=None, draw=None, fill="black", text="", lw=0.2,
              sep=0, minsize=3, options=None, kwoptions=None):
