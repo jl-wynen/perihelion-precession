@@ -22,3 +22,17 @@ def neighbours(iterable):
         second = elem
         yield first, second
         first = second
+
+def interpolate(start, stop, nstep):
+    """
+    Generator that linearly interpolates from start to stop.
+    Returns stop when stopping iteration.
+    """
+
+    step = abs(stop-start)/nstep * (1 if stop > start else -1)
+    current = start
+
+    for _ in range(nstep):
+        yield current
+        current += step
+    return stop
