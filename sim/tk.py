@@ -4,6 +4,7 @@ import numpy as np
 
 from .graphics import hex_colour
 from .util import neighbours
+from .ping import Ping
 
 def setup_window(width, height, background):
     """Open a new window contianing a canvas."""
@@ -27,12 +28,16 @@ class Tk:
 
         self.window, self.canvas = setup_window(*self.transform.screen_extends(), background)
 
+        self._entities = []
+
     def clear(self, objects="all"):
         """Delete given objects from canvas."""
         self.canvas.delete(objects)
 
     def update(self):
         """Update the display."""
+        for entity in self._entities:
+            entity.draw(self)
         self.window.update()
 
     def draw_background(self):
@@ -59,3 +64,11 @@ class Tk:
                                         width=lw, tags=tags)
                 for p0, p1 in neighbours(map(self.transform.world2screen, points))
                 if not np.ma.is_masked(p0) and not np.ma.is_masked(p1)]
+
+    def ping(self, pos, colour, radius_final=None, radius_initial=None, nframes=10):
+        """Place an animated ping at some location."""
+        if radius_final is None:
+            radius_final = self.transform.world_width()/100
+        if radius_initial is None:
+            radius_initial = self.transform.world_width()/5
+        self._entities.append(Ping(pos, colour, radius_final, radius_initial, nframes))
