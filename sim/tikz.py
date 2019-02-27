@@ -202,12 +202,22 @@ class Tikz:
                               rf"{fmt_options(options,kwoptions,draw=draw,fill=fill)}] "
                               rf"at {fmt_point(pos)} {{{text}}};")
 
-    def circle(self, pos, *args, **kwargs):
+    def circle(self, pos, radius, draw=None, fill="black", lw=0, options=None, kwoptions=None):
         """
         Draw a circle at given position.
-        Calls Tikz.node with shape='circle', args, and kwargs.
         """
-        self.node(pos, "circle", *args, **kwargs)
+
+        fill = norm_colour(fill)
+        self.use_colour(fill)
+
+        draw = norm_colour(draw)
+        if draw is None:
+            draw = fill
+        self.use_colour(draw)
+
+        self._commands.append(rf"\filldraw[line width={lw},"
+                              rf"{fmt_options(options, kwoptions, draw=draw, fill=fill)}] "
+                              rf" {fmt_point(pos)} circle ({radius});")
 
     def rectangle(self, pos, *args, **kwargs):
         """
