@@ -246,8 +246,13 @@ def render(image, out_fname="img.pdf", source_fname=None):
         workdir = Path(workdir)
         write(image, workdir/"img.tex")
 
-        subprocess.run(["pdflatex", "-halt-on-error", "-interaction=nonstopmode", "img.tex"],
-                       capture_output=True, check=True, cwd=workdir)
+        try:
+            subprocess.run(["pdflatex", "-halt-on-error", "-interaction=nonstopmode", "img.tex"],
+                           capture_output=True, check=True, cwd=workdir)
+        except subprocess.CalledProcessError as exc:
+            print(exc.output.decode("utf-8"))
+            raise
+
         if source_fname:
             shutil.copy(workdir/"img.tex", source_fname)
         shutil.copy(workdir/"img.pdf", out_fname)
