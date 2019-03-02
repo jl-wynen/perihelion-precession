@@ -43,7 +43,12 @@ def acceleration(body, alpha, beta):
     # compute the acceleration
     return -body.acc * grfact / r**2 * body.x / r
 
-def advance(body, dt, alpha, beta):
-    v = body.v + acceleration(body, alpha, beta)*dt
-    x = body.x + v*dt
+def advance(body, length, nsteps, alpha, beta):
+    """Advance a body for some trajectory length and given number of time steps."""
+    dt = length / nsteps
+    x, v = body.x, body.v
+
+    for _ in range(nsteps):
+        v += acceleration(body, alpha, beta)*dt
+        x += v*dt
     return dataclasses.replace(body, x=x, v=v)

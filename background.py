@@ -45,11 +45,11 @@ def draw_trajectory(img, trajectory):
     for t, (start, end) in enumerate(sim.neighbours(trajectory)):
         img.line([start, end], draw=f"{TRAJECTORY_COLOUR}!{t/T*100}!darkachrom", lw=4)
 
-def evolve(mercury, nsteps, dt, alpha, beta):
+def evolve(mercury, nsteps, params):
     trajectory = [mercury.x]
 
     for _ in range(nsteps):
-        mercury = sim.advance(mercury, dt, alpha, beta)
+        mercury = sim.advance(mercury, **params)
         trajectory.append(mercury.x)
 
     return mercury, trajectory
@@ -58,17 +58,16 @@ def main():
     img = sim.tikz.Tikz(sim.Transform((-WORLD_WIDTH/2, -WORLD_HEIGHT/2),
                                       (WORLD_WIDTH/2, WORLD_HEIGHT/2),
                                       (0, 0),
-                                      (0+SCREEN_WIDTH, 0+SCREEN_HEIGHT)),
-                        clipping_region=[np.array((-WORLD_WIDTH/3, -WORLD_HEIGHT/3)),
-                                         np.array((WORLD_WIDTH/3, WORLD_HEIGHT/3))])
+                                      (0+SCREEN_WIDTH, 0+SCREEN_HEIGHT)))
 
     mercury = sim.CBody.mercury()
     sun = sim.CBody.sun()
 
-    dt = 2.0 * np.linalg.norm(mercury.v) / mercury.acc / 2 # Time step
-    alpha = 5e6 # Strength of 1/r**3 term
-    beta = 0.0 # Strength of 1/r**4 term
-    mercury, trajectory = evolve(mercury, 153*3, dt/3, alpha, beta)
+    integrator_params = {"length": 2.0 * np.linalg.norm(mercury.v) / mercury.acc / 6,
+                         "nsteps": 10,
+                         "alpha": 5e6,
+                         "beta": 0.0}
+    mercury, trajectory = evolve(mercury, 153*3, integrator_params)
 
     draw_grid(img, chain(HLINES, VLINES), np.array((0, 0)), 0.02)
     draw_trajectory(img, trajectory)
