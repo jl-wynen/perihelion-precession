@@ -19,7 +19,13 @@ OUTPUT_RESOLUTION = 150
 HLINES, VLINES = sim.make_grid((-WORLD_WIDTH/2-4, -WORLD_HEIGHT/2-4),
                                (WORLD_WIDTH/2+4, WORLD_HEIGHT/2+4),
                                nlines=(20, 20), resolution=(50, 50))
+
 GRID_COLOUR = "#404040"
+BACKGROUND_COLOUR = "#161616"
+TRAJECTORY_COLOUR = "#606060"
+PERIHELION_COLOUR = "#a0a0a0"
+MERCURY_COLOUR = "red"
+SUN_COLOUR = "yellow"
 
 
 def draw_grid(anim, lines, centre, rs, colour):
@@ -49,19 +55,19 @@ def anim_grid(anim, rsiter, frames=None):
         time.sleep(max(1/60 - time_diff, 0))
 
 
-def anim_orbit(anim, mercury, nframes, dt, alpha, beta, frames=None):
+def anim_orbit(anim, mercury, nframes, integrator_params, tracker=None, frames=None):
     mercury_oval = None
     trajectory = [mercury.x]
 
     for _ in range(nframes):
         start = time.time()
 
-        mercury = sim.advance(mercury, dt, alpha, beta)
+        mercury = sim.advance(mercury, tracker=tracker, **integrator_params)
         trajectory.append(mercury.x)
 
         anim.clear(mercury_oval)
-        anim.line(trajectory[-2:], "#606060", lw=2, tags="trajectory")
-        mercury_oval = anim.circle(mercury.x, 0.1, fill="red", tags="mercury")
+        anim.line(trajectory[-2:], TRAJECTORY_COLOUR, lw=2, tags="trajectory")
+        mercury_oval = anim.circle(mercury.x, 0.1, fill=MERCURY_COLOUR, tags="mercury")
         anim.update()
 
         if frames:
@@ -78,26 +84,28 @@ def main():
                                    (WORLD_WIDTH/2, WORLD_HEIGHT/2),
                                    (0, 0),
                                    (0+SCREEN_WIDTH, 0+SCREEN_HEIGHT)),
-                     background="#161616")
+                     background=BACKGROUND_COLOUR)
 
     # frames = sim.FrameManager(Path(__file__).resolve().parent/"frames", True)
 
     mercury = sim.CBody.mercury()
     sun = sim.CBody.sun()
 
-    dt = 2.0 * np.linalg.norm(mercury.v) / mercury.acc / 2 # Time step
-    alpha = 5e6 # Strength of 1/r**3 term
-    beta = 0.0 # Strength of 1/r**4 term
+    integrator_params = {"length": 2.0 * np.linalg.norm(mercury.v) / mercury.acc / 2,
+                         "nsteps": 20,
+                         "alpha": 0.0,
+                         "beta": 0.0}
 
     anim.draw_background()
     draw_grid(anim, chain(HLINES, VLINES), np.array((0, 0)), 0, GRID_COLOUR)
-    anim.circle(sun.x, 0.5, fill="yellow", tags="sun")
+    anim.circle(sun.x, 0.5, fill=SUN_COLOUR, tags="sun")
+    tracker = sim.ExtremaTracker(sun.x, sim.ExtremaTracker.tk_ping(anim, PERIHELION_COLOUR))
 
-
-    mercury = anim_orbit(anim, mercury, 400, dt, 0, 0)
+    mercury = anim_orbit(anim, mercury, 4000, integrator_params, tracker=tracker)
     anim_grid(anim, np.linspace(0, 0.05, 10))
     anim.clear("mercury")
-    mercury = anim_orbit(anim, mercury, 400, dt, alpha, beta)
+    integrator_params["alpha"] = 5e6
+    mercury = anim_orbit(anim, mercury, 400, integrator_params, tracker=tracker)
 
     # print("Creating GIF")
     # frames.convert_to_gif("mercury.gif")
