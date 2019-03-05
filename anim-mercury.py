@@ -81,6 +81,18 @@ def anim_orbit(anim, mercury, nframes, integrator_params, tracker=None, frames=N
 
     return mercury
 
+def write_animation(frames, gif=False, mp4=True):
+    if gif:
+        print("Creating GIF")
+        frames.convert_to_gif("mercury.gif")
+        print("Created animation mercury.gif")
+
+    if mp4:
+        print("Creating MP4")
+        frames.convert_to_mp4("mercury.mp4")
+        print("Created animation mercury.mp4")
+
+
 def main():
     anim = sim.tk.Tk(sim.Transform((-WORLD_WIDTH/2, -WORLD_HEIGHT/2),
                                    (WORLD_WIDTH/2, WORLD_HEIGHT/2),
@@ -88,7 +100,7 @@ def main():
                                    (0+SCREEN_WIDTH, 0+SCREEN_HEIGHT)),
                      background=BACKGROUND_COLOUR)
 
-    # frames = sim.FrameManager(Path(__file__).resolve().parent/"frames", True)
+    frames = sim.FrameManager(Path(__file__).resolve().parent/"frames", True)
 
     mercury = sim.CBody.mercury()
     sun = sim.CBody.sun()
@@ -99,22 +111,22 @@ def main():
                          "beta": 0.0}
 
     anim.draw_background()
-    draw_grid(anim, chain(HLINES, VLINES), np.array((0, 0)), 0, GRID_COLOUR)
+    draw_grid(anim, chain(HLINES, VLINES), np.array((0, 0)), 0.05, GRID_COLOUR)
     anim.circle(sun.x, 0.5, fill=SUN_COLOUR, tags="sun")
     tracker = sim.ExtremaTracker(sun.x, sim.ExtremaTracker.tk_ping(anim, PERIHELION_COLOUR))
 
-    mercury = anim_orbit(anim, mercury, 4000, integrator_params, tracker=tracker)
-    anim_grid(anim, np.linspace(0, 0.05, 10))
-    anim.clear("mercury")
+    # mercury = anim_orbit(anim, mercury, 4000, integrator_params, tracker=tracker)
+    # anim_grid(anim, np.linspace(0, 0.05, 10))
+    # anim.clear("mercury")
     integrator_params["alpha"] = 5e6
-    mercury = anim_orbit(anim, mercury, 400, integrator_params, tracker=tracker)
+    mercury = anim_orbit(anim, mercury, 400, integrator_params, tracker=tracker, frames=frames)
 
-    # print("Creating GIF")
-    # frames.convert_to_gif("mercury.gif")
-    # print("Created animation mercury.gif")
+    write_animation(frames)
 
     sim.tk.mainloop()
 
 
 if __name__ == "__main__":
     main()
+
+# ffmpeg -framerate 25 -i %04d.png -y -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p anim.mp4
