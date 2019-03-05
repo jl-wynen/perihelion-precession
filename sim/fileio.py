@@ -66,3 +66,19 @@ class FrameManager:
                         fname],
                        check=True, capture_output=True)
 
+    def convert_to_mp4(self, fname, fps=60):
+        """
+        Make an MP4 out of all saved frames.
+        Requires frames to be saved as PNG.
+        """
+        subprocess.run(["ffmpeg",
+                        "-y",
+                        "-xerror",
+                        "-framerate", f"{fps}",
+                        "-i", f"{self.path}/%04d.png",
+                        "-c:v", "libx264",
+                        "-profile:v", "high",
+                        "-crf", "20", "-pix_fmt",
+                        "yuv420p",
+                        fname],
+                       check=True, capture_output=True)
