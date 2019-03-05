@@ -23,7 +23,7 @@ class FrameManager:
 
         init_directory(path, overwrite)
 
-    def save_frame(self, canvas, ps=True, png=False, resolution=None):
+    def save_frame(self, canvas, ps=True, png=False, size=None):
         """Save a single frame as postscript or PNG or both."""
 
         psname = self.path/self._fname_fmt.format(self._current)
@@ -33,9 +33,9 @@ class FrameManager:
 
         if png:
             # convert to png
-            if resolution is None:
-                raise ValueError("Need a resoltuion when saving PNGs")
-            self.convert_frame(self._current, resolution)
+            if size is None:
+                raise ValueError("Need a size when saving PNGs")
+            self.convert_frame(self._current, size)
 
         if not ps:
             # remove ps written before
@@ -43,20 +43,16 @@ class FrameManager:
 
         self._current += 1
 
-    def convert_frame(self, number, resolution):
+    def convert_frame(self, number, size):
         """Convert ps of a frame to PNG."""
 
         if number is None:
             number = self._current
         fname = self.path/self._fname_fmt.format(number)
 
-        # TODO
-# subprocess.run(['gs', '-sDEVICE=png16m', '-sOutputFile=%04d.png',
-#                 '-g50x50', '-dBATCH', '-dNOPAUSE', *psfiles],
-#                cwd='frames')
-
         subprocess.run(["gs", "-dSAFER", "-dBATCH", "-dNOPAUSE", "-sDEVICE=png16m",
-                        f"-r{resolution}", f"-sOutputFile={fname.with_suffix('.png')}", f"{fname}"],
+                        f"-g{size[0]}x{size[1]}", "-dEPSFitPage",
+                        f"-sOutputFile={fname.with_suffix('.png')}", f"{fname}"],
                        check=True, capture_output=True)
 
     def convert_to_gif(self, fname):

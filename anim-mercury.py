@@ -12,8 +12,10 @@ SCREEN_HEIGHT = 600
 WORLD_WIDTH = 16
 WORLD_HEIGHT = 16
 
-# resolution of output bitmaps
-OUTPUT_RESOLUTION = 150
+# size of output pixel images
+OUTPUT_WIDTH = 512
+OUTPUT_HEIGHT = 512
+OUTPUT_SIZE = (OUTPUT_WIDTH, OUTPUT_HEIGHT)
 
 # grid-lines
 HLINES, VLINES = sim.make_grid((-WORLD_WIDTH/2-4, -WORLD_HEIGHT/2-4),
@@ -48,7 +50,7 @@ def anim_grid(anim, rsiter, frames=None):
         anim.update()
 
         if frames:
-            frames.save_frame(anim.canvas, ps=True, png=True, resolution=OUTPUT_RESOLUTION)
+            frames.save_frame(anim.canvas, ps=True, png=True, size=OUTPUT_SIZE)
 
         end = time.time()
         time_diff = end-start
@@ -71,7 +73,7 @@ def anim_orbit(anim, mercury, nframes, integrator_params, tracker=None, frames=N
         anim.update()
 
         if frames:
-            frames.save_frame(anim.canvas, ps=True, png=True, resolution=OUTPUT_RESOLUTION)
+            frames.save_frame(anim.canvas, ps=True, png=True, size=OUTPUT_SIZE)
 
         end = time.time()
         time_diff = end-start
