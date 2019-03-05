@@ -35,13 +35,17 @@ class Ping:
         # ID of the circle or ring
         self._gid = None
 
-    def draw(self, anim):
+    def draw(self, anim, keep_finished=True):
         """
         Draw the ping into backend anim.
         Every time this function is called, the previous ring/circle is
         removed and replaced by one with modified radius.
         Call this function exactly once per frame!
         """
+
+        if self._finished and keep_finished and self._gid is not None:
+            # finished circle is already drawn
+            return
 
         anim.clear(self._gid)
 
