@@ -234,6 +234,7 @@ def write(image, fname):
 
         texf.write(rf"""\documentclass{{standalone}}
 \usepackage{{tikz}}
+\usepackage{{bm}}
 \usetikzlibrary{{backgrounds}}
 {newline.join(define_colours(COLOURS.keys()))}
 \begin{{document}}
