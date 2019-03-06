@@ -49,10 +49,12 @@ def scale_to(x, from_max, to_min, to_max):
 def draw_perihelions(img, perihelions):
     nper = len(perihelions)
     for i, perihelion in enumerate(perihelions):
-        col = scale_to(i, nper-1, 50, 100)
+        if nper == 1:
+            col = 100
+        else:
+            col = scale_to(i, nper-1, 50, 100)
         colour = f"{PERIHELION_COLOUR}!{col}!aiphidarkachrom"
-        img.node(perihelion, "", fill="none", minsize=0,
-                 text=fr"\huge\textcolor{{{colour}}}{{$\boldsymbol{{\times}}$}}")
+        img.circle(perihelion, 0.2, fill=colour)
 
 def evolve(mercury, nsteps, params, tracker):
     trajectory = [mercury.x]
@@ -67,8 +69,8 @@ def main():
     img = sim.tikz.Tikz(sim.Transform((-WORLD_WIDTH/2, -WORLD_HEIGHT/2),
                                       (WORLD_WIDTH/2, WORLD_HEIGHT/2),
                                       (0, 0),
-                                      (0+SCREEN_WIDTH, 0+SCREEN_HEIGHT)),
-                        background=BACKGROUND_COLOUR)
+                                      (0+SCREEN_WIDTH, 0+SCREEN_HEIGHT)))
+                        # background=BACKGROUND_COLOUR)
 
     mercury = sim.CBody.mercury()
     sun = sim.CBody.sun()
@@ -78,12 +80,12 @@ def main():
 
     integrator_params = {"length": 2.0 * np.linalg.norm(mercury.v) / mercury.acc / 2,
                          "nsteps": 10,
-                         "alpha": 2e6,
-                         "beta": 0.0}
+                         "alpha": 0.0,
+                         "beta": 2e6}
 
     mercury, trajectory = evolve(mercury, 1000, integrator_params, tracker)
 
-    draw_grid(img, chain(HLINES, VLINES), np.array((0, 0)), 0.02)
+    draw_grid(img, chain(HLINES, VLINES), np.array((0, 0)), 0.017)
     draw_trajectory(img, trajectory)
     draw_perihelions(img, perihelions)
     img.circle(sun.x, 1, fill=SUN_COLOUR)
