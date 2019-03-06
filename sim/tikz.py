@@ -226,23 +226,26 @@ class Tikz:
         """
         self.node(pos, "rectangle", *args, **kwargs)
 
-def write(image, fname):
+def write(image, fname, extra_preamble=None):
     """Write a standalone TeX file containing only the given Tikz image."""
     with open(fname, "w") as texf:
         # can't use backslash in f-string
         newline = "\n"
+        if extra_preamble is None:
+            extra_preamble = ""
 
         texf.write(rf"""\documentclass{{standalone}}
 \usepackage{{tikz}}
 \usepackage{{bm}}
-\usetikzlibrary{{backgrounds}}
+\usetikzlibrary{{backgrounds, fadings}}
+{extra_preamble}
 {newline.join(define_colours(COLOURS.keys()))}
 \begin{{document}}
 {image}
 \end{{document}}
 """)
 
-def render(image, out_fname="img.pdf", source_fname=None):
+def render(image, out_fname="img.pdf", source_fname=None, extra_preamble=None):
     """
     Render a Tikz image to PDF by using pdflatex.
     Write and compile TeX in a temporary directory and store only the output file
@@ -255,7 +258,7 @@ def render(image, out_fname="img.pdf", source_fname=None):
     """
     with TemporaryDirectory() as workdir:
         workdir = Path(workdir)
-        write(image, workdir/"img.tex")
+        write(image, workdir/"img.tex", extra_preamble)
 
         try:
             subprocess.run(["pdflatex", "-halt-on-error", "-interaction=nonstopmode", "img.tex"],

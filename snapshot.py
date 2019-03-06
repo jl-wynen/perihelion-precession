@@ -1,5 +1,4 @@
 from itertools import chain
-from pathlib import Path
 
 import numpy as np
 
@@ -9,21 +8,36 @@ import sim
 # image dimensions
 SCREEN_WIDTH = 16
 SCREEN_HEIGHT = 16
-WORLD_WIDTH = 14
-WORLD_HEIGHT = 14
+WORLD_WIDTH = 16
+WORLD_HEIGHT = 16
 
 # grid-lines
 HLINES, VLINES = sim.make_grid((-WORLD_WIDTH/2, -WORLD_HEIGHT/2),
                                (WORLD_WIDTH/2, WORLD_HEIGHT/2),
-                               nlines=(14, 14), resolution=(50, 50))
+                               nlines=(16, 16), resolution=(50, 50))
 
 BACKGROUND_COLOUR = "aiphidarkachrom!50!black"
 GRID_COLOUR = "white!50!aiphidarkachrom"
 TRAJECTORY_COLOUR = "white!40!aiphidarkachrom"
 PERIHELION_COLOUR = "white!80!aiphidarkachrom"
 MERCURY_COLOUR = "aiphired!60!aiphidarkachrom"
-SUN_COLOUR = "aiphiyellow!50!aiphidarkachrom"
+SUN_COLOUR = "aiphiyellow!80!aiphidarkachrom"
 
+# Define shading to make the sun glow.
+# This must be included in the preamble of any TeX document
+# using images created with this script!
+EXTRA_PREAMBLE = r"""\pgfdeclareradialshading{glow}{\pgfpoint{0cm}{0cm}}{
+  color(0mm)=(white);
+  color(1.7mm)=(white);
+  color(2mm)=(white!50!black);
+  color(2.4mm)=(white!20!transparent);
+  color(2.7mm)=(transparent)
+}
+
+\begin{tikzfadingfrompicture}[name=glow fading]
+  \shade[shading=glow] (0,0) circle (1.3);
+\end{tikzfadingfrompicture}
+"""
 
 def draw_grid(img, lines, centre, rs):
     # maximum radius at which a line is shown
@@ -80,7 +94,7 @@ def main():
 
     integrator_params = {"length": 2.0 * np.linalg.norm(mercury.v) / mercury.acc / 2,
                          "nsteps": 10,
-                         "alpha": 0.0,
+                         "alpha": 0,
                          "beta": 2e6}
 
     mercury, trajectory = evolve(mercury, 1000, integrator_params, tracker)
@@ -88,10 +102,10 @@ def main():
     draw_grid(img, chain(HLINES, VLINES), np.array((0, 0)), 0.017)
     draw_trajectory(img, trajectory)
     draw_perihelions(img, perihelions)
-    img.circle(sun.x, 1, fill=SUN_COLOUR)
+    img.cmd(rf"\fill[{SUN_COLOUR},path fading=glow fading] {sim.tikz.fmt_point(sun.x)} circle (3);")
     img.circle(mercury.x, 0.4, fill=MERCURY_COLOUR)
 
-    sim.tikz.render(img, "snapshot.pdf", "snapshot.tex")
+    sim.tikz.render(img, "snapshot.pdf", "snapshot.tex", extra_preamble=EXTRA_PREAMBLE)
     with open("image.tex", "w") as f:
         f.write(str(img))
 
