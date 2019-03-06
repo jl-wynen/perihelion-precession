@@ -23,10 +23,10 @@ HLINES, VLINES = sim.make_grid((-WORLD_WIDTH/2, -WORLD_HEIGHT/2),
                                nlines=(14, 14), resolution=(50, 50))
 
 BACKGROUND_COLOUR = "aiphidarkachrom!50!black"
-GRID_COLOUR = "white!50!aiphidarkachrom"
-TRAJECTORY_COLOUR = "white!40!aiphidarkachrom"
-MERCURY_COLOUR = "aiphired!60!aiphidarkachrom"
-SUN_COLOUR = "aiphiyellow!50!aiphidarkachrom"
+GRID_COLOUR = "white!45!aiphidarkachrom"
+TRAJECTORY_COLOUR = "white!30!aiphidarkachrom"
+MERCURY_COLOUR = "aiphired!45!aiphidarkachrom"
+SUN_COLOUR = "aiphiyellow!35!aiphidarkachrom"
 
 def draw_grid(img, lines, centre, rs):
     # maxiumum radius at which a line is shown
