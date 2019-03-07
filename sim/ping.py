@@ -49,6 +49,8 @@ class Ping:
 
         anim.clear(self._gid)
 
+        # get the radius first to set self._finished properly
+        radius = self._get_radius()
         if self._finished:
             fill = self.colour
             draw = None
@@ -56,7 +58,7 @@ class Ping:
             fill = None
             draw = self.colour
 
-        self._gid = anim.circle(self.position, self._get_radius(), fill, draw)
+        self._gid = anim.circle(self.position, radius, fill, draw)
 
     def clear(self, anim):
         """Remove the ring/circle from display."""
